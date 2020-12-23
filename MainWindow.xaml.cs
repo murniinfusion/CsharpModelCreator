@@ -32,28 +32,85 @@ namespace CsharpModelCreator
 
         private void GenerateButton_Click(object sender, RoutedEventArgs e)
         {
-            columnDetails = new List<ColumnDetail>();
             string connectionString = @"Data Source="+ServerTextBox.Text.Trim()+";Initial Catalog="+databaseTextbox.Text.Trim()
                 +";User ID="+usernameTextbox.Text.Trim()+";Password="+pwdBox.Password.Trim();
             SqlConnection cnn;
             SqlCommand command;
             SqlDataReader dataReader;
-            
-                string query = "SELECT isc.TABLE_NAME, isc.COLUMN_NAME, isc.ORDINAL_POSITION, isc.DATA_TYPE, "
-                                + "isc.CHARACTER_MAXIMUM_LENGTH, isc.NUMERIC_PRECISION, isc.NUMERIC_SCALE, isc.DATETIME_PRECISION, c.is_nullable, c.is_identity "
-                                + "FROM INFORMATION_SCHEMA.COLUMNS isc inner join sys.all_columns c on isc.COLUMN_NAME = c.name "
-                                + "inner join sys.all_objects o on c.object_id = o.object_id "
-                                + "WHERE o.name = '"+tableTextbox.Text.Trim()+"' and isc.TABLE_NAME = '"+tableTextbox.Text.Trim()+ "' and (o.type = 'U' or o.type='V') ";
+            string query = "";
+            string all = "";
+            if (alltbl.IsChecked==true)
+            {
+                List<string> tblnames = new List<string>();
+                all = "SELECT distinct isc.TABLE_NAME " +
+                        " FROM INFORMATION_SCHEMA.COLUMNS isc inner join sys.all_columns c on isc.COLUMN_NAME = c.name " +
+                        " inner join sys.all_objects o on c.object_id = o.object_id " +
+                        " WHERE(o.type = 'U' or o.type = 'V')";
+
                 //logbox.AppendText(query + "\n\n");
                 cnn = new SqlConnection(connectionString);
                 cnn.Open();
 
-                command = new SqlCommand(query, cnn);
+                command = new SqlCommand(all, cnn);
                 dataReader = command.ExecuteReader();
 
                 while (dataReader.Read())
                 {
-                    ColumnDetail cd = new ColumnDetail();
+                    try
+                    {
+                        if (Convert.ToString(dataReader.GetValue(0)) != "NULL")
+                        {
+                            string TABLE_NAME = Convert.ToString(dataReader.GetValue(0));
+                            tblnames.Add(TABLE_NAME);
+                        }
+                    }
+                    catch (Exception ex)
+                    { }
+                }
+
+                foreach(string tbl in tblnames)
+                {
+                    query = "SELECT isc.TABLE_NAME, isc.COLUMN_NAME, isc.ORDINAL_POSITION, isc.DATA_TYPE, "
+                                                + "isc.CHARACTER_MAXIMUM_LENGTH, isc.NUMERIC_PRECISION, isc.NUMERIC_SCALE, isc.DATETIME_PRECISION, c.is_nullable, c.is_identity "
+                                                + "FROM INFORMATION_SCHEMA.COLUMNS isc inner join sys.all_columns c on isc.COLUMN_NAME = c.name "
+                                                + "inner join sys.all_objects o on c.object_id = o.object_id "
+                                                + "WHERE o.name = '" + tbl.Trim() + "' and isc.TABLE_NAME = '" + tbl.Trim() + "' and (o.type = 'U' or o.type='V') ";
+
+                    QueryColumns(tbl);
+                }
+            }
+            else
+            {
+                QueryColumns(tableTextbox.Text);
+                
+            }
+                //logbox.AppendText(query + "\n\n");
+                
+        }
+
+        private void QueryColumns(string tbl)
+        {
+            columnDetails = new List<ColumnDetail>();
+            string query = "SELECT isc.TABLE_NAME, isc.COLUMN_NAME, isc.ORDINAL_POSITION, isc.DATA_TYPE, "
+                                                + "isc.CHARACTER_MAXIMUM_LENGTH, isc.NUMERIC_PRECISION, isc.NUMERIC_SCALE, isc.DATETIME_PRECISION, c.is_nullable, c.is_identity "
+                                                + "FROM INFORMATION_SCHEMA.COLUMNS isc inner join sys.all_columns c on isc.COLUMN_NAME = c.name "
+                                                + "inner join sys.all_objects o on c.object_id = o.object_id "
+                                                + "WHERE o.name = '" + tbl.Trim() + "' and isc.TABLE_NAME = '" + tbl.Trim() + "' and (o.type = 'U' or o.type='V') ";
+            SqlConnection cnn;
+            SqlCommand command;
+            SqlDataReader dataReader;
+            string connectionString = @"Data Source=" + ServerTextBox.Text.Trim() + ";Initial Catalog=" + databaseTextbox.Text.Trim()
+                + ";User ID=" + usernameTextbox.Text.Trim() + ";Password=" + pwdBox.Password.Trim();
+
+            cnn = new SqlConnection(connectionString);
+            cnn.Open();
+
+            command = new SqlCommand(query, cnn);
+            dataReader = command.ExecuteReader();
+
+            while (dataReader.Read())
+            {
+                ColumnDetail cd = new ColumnDetail();
                 try
                 {
                     if (Convert.ToString(dataReader.GetValue(0)) != "NULL")
@@ -61,15 +118,18 @@ namespace CsharpModelCreator
                         cd.TABLE_NAME = Convert.ToString(dataReader.GetValue(0));
                     }
                 }
-                catch(Exception ex)
-                {}
+                catch (Exception ex)
+                { }
+
                 try
                 {
                     if (Convert.ToString(dataReader.GetValue(1)) != "NULL")
                     {
                         cd.COLUMN_NAME = Convert.ToString(dataReader.GetValue(1));
                     }
-                }catch(Exception ex) { }
+                }
+                catch (Exception ex) { }
+
                 try
                 {
                     if (Convert.ToString(dataReader.GetValue(2)) != "NULL")
@@ -78,17 +138,17 @@ namespace CsharpModelCreator
                     }
                 }
                 catch (Exception ex)
-                {}
+                { }
                 try
                 {
                     if (Convert.ToString(dataReader.GetValue(3)) != "NULL")
                     {
                         cd.DATA_TYPE = Convert.ToString(dataReader.GetValue(3));
                     }
-                    
+
                 }
                 catch (Exception ex)
-                {}
+                { }
                 try
                 {
                     if (Convert.ToString(dataReader.GetValue(4)) != "NULL")
@@ -97,7 +157,7 @@ namespace CsharpModelCreator
                     }
                 }
                 catch (Exception ex)
-                {}
+                { }
                 try
                 {
                     if (Convert.ToString(dataReader.GetValue(5)) != "NULL")
@@ -105,7 +165,7 @@ namespace CsharpModelCreator
                         cd.CHARACTER_MAXIMUM_LENGTH = Convert.ToInt32(dataReader.GetValue(5));
                     }
                 }
-                catch(Exception ex) { }
+                catch (Exception ex) { }
                 try
                 {
                     if (Convert.ToString(dataReader.GetValue(6)) != "NULL")
@@ -114,7 +174,7 @@ namespace CsharpModelCreator
                     }
                 }
                 catch (Exception ex)
-                {}
+                { }
                 try
                 {
                     if (Convert.ToString(dataReader.GetValue(7)) != "NULL")
@@ -123,22 +183,22 @@ namespace CsharpModelCreator
                     }
                 }
                 catch (Exception ex)
-                {}
+                { }
                 cd.is_nullable = Convert.ToBoolean(dataReader.GetValue(8));
-                    
-                    cd.is_identity = Convert.ToBoolean(dataReader.GetValue(9));
-                    
-                    columnDetails.Add(cd);
-                }
-                dataReader.Close();
-                command.Dispose();
-                cnn.Close();
-            
 
-            generateClass();
+                cd.is_identity = Convert.ToBoolean(dataReader.GetValue(9));
+
+                columnDetails.Add(cd);
+            }
+            dataReader.Close();
+            command.Dispose();
+            cnn.Close();
+
+
+            generateClass(tbl);
         }
 
-        private void generateClass()
+        private void generateClass(string tbl)
         {
             //to generate class file
             try
@@ -147,7 +207,7 @@ namespace CsharpModelCreator
                 sb.Append("using System;\n");
                 sb.Append("namespace "+namespaceBox.Text.Trim()+"\n");
                 sb.Append("{" + "\n");
-                sb.Append("\tpublic class "+tableTextbox.Text.Trim() + "Model\n");
+                sb.Append("\tpublic class "+ tbl.Trim() + "\n");
                 sb.Append("\t{" + "\n");
                 foreach(ColumnDetail c in columnDetails)
                 {   //int, varchar,datetime, decimal, bit
@@ -160,20 +220,24 @@ namespace CsharpModelCreator
                     {
                         sb.Append("string");
                     }
-                    else if (c.DATA_TYPE == "datetime")
+                    else if (c.DATA_TYPE == "datetime" || c.DATA_TYPE== "datetime2")
                     {
                         sb.Append("DateTime");
                     }
-                    else if(c.DATA_TYPE == "bool")
+                    else if(c.DATA_TYPE == "bit" || c.DATA_TYPE=="smallint" || c.DATA_TYPE == "tinyint")
                     {
-                        sb.Append("bit");
+                        sb.Append("bool");
                     }
-                    sb.Append(" "+c.COLUMN_NAME +" {get; set;} \n");
+                    else if (c.DATA_TYPE=="real")
+                    {
+                        sb.Append("decimal");
+                    }
+                    sb.Append(" "+c.COLUMN_NAME +" { get; set; } \n");
                 }
                 sb.Append("\t}\n");
                 sb.Append("}");
 
-                string filename = "\\"+tableTextbox.Text.Trim()+"Model.cs";
+                string filename = "\\"+tbl.Trim()+".cs";
                 string path = pathbox.Text.Trim();
 
                 /*SaveFileDialog saveFileDialog = new SaveFileDialog();

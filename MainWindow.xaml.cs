@@ -216,13 +216,21 @@ namespace CsharpModelCreator
                     {
                         sb.Append(c.DATA_TYPE);
                     }
+                    else if (c.DATA_TYPE == "bigint")
+                    {
+                        sb.Append("long");
+                    }
                     else if(c.DATA_TYPE == "varchar" || c.DATA_TYPE=="nvarchar")
                     {
                         sb.Append("string");
                     }
-                    else if (c.DATA_TYPE == "datetime" || c.DATA_TYPE== "datetime2")
+                    else if (c.DATA_TYPE == "datetime" || c.DATA_TYPE== "datetime2" || c.DATA_TYPE == "date")
                     {
                         sb.Append("DateTime");
+                    }
+                    else if(c.DATA_TYPE== "datetimeoffset")
+                    {
+                        sb.Append("DateTimeOffset");
                     }
                     else if(c.DATA_TYPE == "bit" || c.DATA_TYPE=="smallint" || c.DATA_TYPE == "tinyint")
                     {
